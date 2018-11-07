@@ -8,4 +8,4 @@ pip install -r requirements.txt
 
 :created
 
-.env\Scripts\python.exe -m unittest main.py
+python -m unittest main.py
