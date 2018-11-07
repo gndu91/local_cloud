@@ -12,6 +12,7 @@ ALGORITHM = algorithms.AES
 BACKEND = default_backend()
 MODE = modes.CTR
 
+
 def encrypt_data(data) -> bytes:
 	# Encrypt using the configuration above, later, will return config along
 	# 	with data, for now, it return None as a config element, because
@@ -22,6 +23,7 @@ def encrypt_data(data) -> bytes:
 	encryptor = cipher.encryptor()
 	data = PKCS7.pad(data)
 	return nonce + encryptor.update(data) + encryptor.finalize()
+
 
 # This is only here to have an ordered
 # 	folder, with 002 before 100
@@ -54,7 +56,8 @@ def generate_key(name, key_name='DEFAULT'):
 
 	key = encrypt_data(key)
 
-def init(name=DEFAULT_NAME, block_size=1024*1024, noise_as_background=True):
+
+def init(name=DEFAULT_NAME, block_size=1024 * 1024, noise_as_background=True):
 	"""Initialize a local folder, with a fixed block of noise or zeros"""
 	# TODO: Decide if it is a good idea to restrain block sizes to fit with
 	# 	aes block size
@@ -63,7 +66,7 @@ def init(name=DEFAULT_NAME, block_size=1024*1024, noise_as_background=True):
 
 	with open(os.path.join(name, os.path.join('BLOCK%s' % str(0).zfill(BLOCK_INDEX_LENGTH))), 'wb') as f:
 		# TODO: Optimize to make it chunk by chunk for big block sizes
-		f.write(os.urandom(block_size) if noise_as_background else bytes([0]*block_size))
+		f.write(os.urandom(block_size) if noise_as_background else bytes([0] * block_size))
 
 
 def nuke(name):
@@ -77,11 +80,7 @@ def nuke(name):
 		except FileNotFoundError:
 			continue_ = True
 
-
 	os.rmdir(name)
-
-
-
 
 
 class Tests(unittest.TestCase):
@@ -89,8 +88,8 @@ class Tests(unittest.TestCase):
 		# First of all, we choose an unique name to avoid messing with actual data
 
 		for noise in (False, True):
-			name = 'tmp.%s' % hex(random.randint(0, 16**DEFAULT_TMP_NONCE_LENGTH))[2:].zfill(DEFAULT_TMP_NONCE_LENGTH)
-			block_size = 1024*1024
+			name = 'tmp.%s' % hex(random.randint(0, 16 ** DEFAULT_TMP_NONCE_LENGTH))[2:].zfill(DEFAULT_TMP_NONCE_LENGTH)
+			block_size = 1024 * 1024
 			try:
 				init(name, block_size, noise)
 				print('Database initialized in %s' % name)
