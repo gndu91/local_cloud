@@ -13,6 +13,7 @@ BACKEND = default_backend()
 ENCRYPTION_ALGORITHM = algorithms.AES
 ENCRYPTION_BACKEND = BACKEND
 ENCRYPTION_MODE = modes.CTR
+ENCRYPTION_KEY_SIZE = next(iter(reversed(list(i for i in ENCRYPTION_ALGORITHM.key_sizes if i < 512))))
 
 
 def encrypt_data(data) -> bytes:
@@ -40,7 +41,7 @@ def generate_key(name, key_name='DEFAULT'):
 			# First step: Generate the encryption key
 			# We don't need more than 256, so we take the highest under 512 bits
 			# Key sizes are sorted by default, so we just have to take the last one
-			key_length = next(reversed(i for i in ENCRYPTION_ALGORITHM.key_sizes if i < 512)) // 8
+			key_length = ENCRYPTION_KEY_SIZE
 
 	print('Generating a %s bits key...' % (key_length * 8), flush=True, end='')
 	key = os.urandom(key_length)
