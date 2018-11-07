@@ -1,8 +1,11 @@
 # import cryptography
 import os, unittest, random
 
+DEFAULT_NAME = 'default'
+DEFAULT_TMP_NONCE_LENGTH = 8
 
-def init(name='default', block_size=1024*1024):
+
+def init(name=DEFAULT_NAME, block_size=1024*1024):
 	"""Initialize a local folder, with a fixed block of noise"""
 
 	# Will raise an exception if the folder already exists
@@ -11,23 +14,20 @@ def init(name='default', block_size=1024*1024):
 
 def nuke(name):
 	"""Destroy the entire database, hazardous, will be removed later"""
-	raise NotImplementedError
+	os.rmdir(name)
 
 
 
 
 class Tests(unittest.TestCase):
 	def test_initialization(self):
-
-		# First of all, we create a temporary folder
-		folder = 'tmp.%s' % hex(random.randint(0, 16**8))[2:].zfill(8)
-		os.makedirs(folder, exist_ok=True)
-
-		# Then, we go inside it
-		os.chdir(folder)
+		# First of all, we choose an unique name to avoid messing with actual data
+		name = 'tmp.%s' % hex(random.randint(0, 16**DEFAULT_TMP_NONCE_LENGTH))[2:].zfill(DEFAULT_TMP_NONCE_LENGTH)
 
 		try:
-			print(input(os.path.abspath('.')))
+			init(name)
+			print('Database initialized in %s' % name)
 		finally:
-			os.chdir('..')
-			os.rmdir(folder)
+			# I don't want to left trash
+			nuke(name)
+			print('Database %s deleted' % name)
