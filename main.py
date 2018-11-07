@@ -17,7 +17,7 @@ def encrypt_data(data) -> bytes:
 	# Encrypt using the configuration above, later, will return config along
 	# 	with data, for now, it return None as a config element, because
 	# 	I don't know how it is going to be
-	assert isinstance(data, bytes), types(data)
+	assert isinstance(data, bytes), type(data)
 	nonce = os.urandom(ALGORITHM.block_size // 8)
 	cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
 	encryptor = cipher.encryptor()
