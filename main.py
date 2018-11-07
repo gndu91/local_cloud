@@ -6,11 +6,13 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
 
+BACKEND = default_backend()
+
 # For the moment, this will be written in the code, later it will be
 # 	written in a database.
-ALGORITHM = algorithms.AES
-BACKEND = default_backend()
-MODE = modes.CTR
+ENCRYPTION_ALGORITHM = algorithms.AES
+ENCRYPTION_BACKEND = BACKEND
+ENCRYPTION_MODE = modes.CTR
 
 
 def encrypt_data(data) -> bytes:
@@ -18,8 +20,8 @@ def encrypt_data(data) -> bytes:
 	# 	with data, for now, it return None as a config element, because
 	# 	I don't know how it is going to be
 	assert isinstance(data, bytes), type(data)
-	nonce = os.urandom(ALGORITHM.block_size // 8)
-	cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=backend)
+	nonce = os.urandom(ENCRYPTION_ALGORITHM.block_size // 8)
+	cipher = Cipher(ENCRYPTION_ALGORITHM(key), ENCRYPTION_MODE(nonce), backend=ENCRYPTION_BACKEND)
 	encryptor = cipher.encryptor()
 	data = PKCS7.pad(data)
 	return nonce + encryptor.update(data) + encryptor.finalize()
@@ -35,10 +37,10 @@ DEFAULT_TMP_NONCE_LENGTH = 8
 def generate_key(name, key_name='DEFAULT'):
 	assert key_name == 'DEFAULT', 'For now, everything will be encrypted using it'
 
-	# First step: Generate the encryption key
-	# We don't need more than 256, so we take the highest under 512 bits
-	# Key sizes are sorted by default, so we just have to take the last one
-	key_length = next(reversed(i for i in ALGORITHM.key_sizes if i < 512)) // 8
+			# First step: Generate the encryption key
+			# We don't need more than 256, so we take the highest under 512 bits
+			# Key sizes are sorted by default, so we just have to take the last one
+			key_length = next(reversed(i for i in ENCRYPTION_ALGORITHM.key_sizes if i < 512)) // 8
 
 	print('Generating a %s bits key...' % (key_length * 8), flush=True, end='')
 	key = os.urandom(key_length)
