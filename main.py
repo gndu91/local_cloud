@@ -79,7 +79,7 @@ def init(name=DEFAULT_NAME, block_size=1024 * 1024, noise_as_background=True):
 
 	with open(os.path.join(name, os.path.join('BLOCK%s' % str(0).zfill(BLOCK_INDEX_LENGTH))), 'wb') as f:
 		# TODO: Optimize to make it chunk by chunk for big block sizes
-		f.write(os.urandom(block_size) if noise_as_background else bytes([0] * block_size))
+		f.write(os.urandom(block_size) if noise_as_background else bytes(block_size))
 
 
 def nuke(name):
