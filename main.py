@@ -16,16 +16,26 @@ ENCRYPTION_MODE = modes.CTR
 ENCRYPTION_KEY_SIZE = next(iter(reversed(list(i for i in ENCRYPTION_ALGORITHM.key_sizes if i < 512))))
 
 
-def encrypt_data(data) -> bytes:
+def encrypt_data(key, data) -> bytes:
 	# Encrypt using the configuration above, later, will return config along
 	# 	with data, for now, it return None as a config element, because
 	# 	I don't know how it is going to be
 	assert isinstance(data, bytes), type(data)
 	nonce = os.urandom(ENCRYPTION_ALGORITHM.block_size // 8)
 	cipher = Cipher(ENCRYPTION_ALGORITHM(key), ENCRYPTION_MODE(nonce), backend=ENCRYPTION_BACKEND)
-	encryptor = cipher.encryptor()
-	data = PKCS7.pad(data)
-	return nonce + encryptor.update(data) + encryptor.finalize()
+	encryptor, padder = cipher.encryptor(), PKCS7(ENCRYPTION_ALGORITHM.block_size).padder()
+	return nonce + encryptor.update(padder.update(data) + padder.finalize()) + encryptor.finalize()
+
+
+def decrypt_data(key, data) -> bytes:
+	# Encrypt using the configuration above, later, will return config along
+	# 	with data, for now, it return None as a config element, because
+	# 	I don't know how it is going to be
+	assert isinstance(data, bytes), type(data)
+	nonce, data = data[:ENCRYPTION_ALGORITHM.block_size // 8], data[:ENCRYPTION_ALGORITHM.block_size // 8:]
+	cipher = Cipher(ENCRYPTION_ALGORITHM(key), ENCRYPTION_MODE(nonce), backend=ENCRYPTION_BACKEND)
+	decryptor, unpadder = cipher.decryptor(), PKCS7(ENCRYPTION_ALGORITHM.block_size).unpadder()
+	return unpadder.update(decryptor.update(data) + decryptor.finalize()) + unpadder.finalize()
 
 
 # This is only here to have an ordered
@@ -105,3 +115,11 @@ class Tests(unittest.TestCase):
 				# I don't want to left trash
 				nuke(name)
 				print('Database %s deleted' % name)
+
+	def test_encryption(self):
+		"""Check that encryption is working properly.
+		For now, the entire encryption is based on hard-coded preferences, later, this will change"""
+		for i in range(2):
+			key = os.urandom(random.randint(ENCRYPTION_KEY_SIZE // 8))
+			data = bytes(ENCRYPTION_ALGORITHM.block_size * 1024 // 8)
+			self.assertEqual(decrypt_data(key, encrypt_data(key, data)), data)
