@@ -1,3 +1,4 @@
+"""WARNING: AT THIS STAGE, THIS LIBRARY IS NOR THREAD SAFE, NOR PROCESS SAFE"""
 # import cryptography
 import os, unittest, random
 import getpass
@@ -32,7 +33,7 @@ def decrypt_data(key, data) -> bytes:
 	# 	with data, for now, it return None as a config element, because
 	# 	I don't know how it is going to be
 	assert isinstance(data, bytes), type(data)
-	nonce, data = data[:ENCRYPTION_ALGORITHM.block_size // 8], data[:ENCRYPTION_ALGORITHM.block_size // 8:]
+	nonce, data = data[:ENCRYPTION_ALGORITHM.block_size // 8], data[ENCRYPTION_ALGORITHM.block_size // 8:]
 	cipher = Cipher(ENCRYPTION_ALGORITHM(key), ENCRYPTION_MODE(nonce), backend=ENCRYPTION_BACKEND)
 	decryptor, unpadder = cipher.decryptor(), PKCS7(ENCRYPTION_ALGORITHM.block_size).unpadder()
 	return unpadder.update(decryptor.update(data) + decryptor.finalize()) + unpadder.finalize()
