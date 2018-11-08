@@ -2,7 +2,7 @@
 # import cryptography
 import os, unittest, random
 
-USE_GETPASS = False
+USE_GETPASS = True
 
 if USE_GETPASS:
 	import getpass
