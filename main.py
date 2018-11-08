@@ -1,7 +1,17 @@
 """WARNING: AT THIS STAGE, THIS LIBRARY IS NOR THREAD SAFE, NOR PROCESS SAFE"""
 # import cryptography
 import os, unittest, random
-import getpass
+
+USE_GETPASS = False
+
+if USE_GETPASS:
+	import getpass
+else:
+	from easygui import passwordbox
+
+	getpass = type('getpass', (object,), dict(
+		getpass=passwordbox
+	))
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.padding import PKCS7
@@ -46,29 +56,73 @@ DEFAULT_NAME = 'default'
 DEFAULT_TMP_NONCE_LENGTH = 8
 
 
+# TODO: Create recovery methods, and store them at the end of blocks
 def generate_key(name, key_name='DEFAULT'):
-	assert key_name == 'DEFAULT', 'For now, everything will be encrypted using it'
+	"""Generate a key inside the keyring sub folder, then ask for a password
+	Raise an exception if the key is already defined."""
 
-			# First step: Generate the encryption key
-			# We don't need more than 256, so we take the highest under 512 bits
-			# Key sizes are sorted by default, so we just have to take the last one
-			key_length = ENCRYPTION_KEY_SIZE
+	# TODO: Backward compatibility
+	if isinstance(key_name, bytes):
+		key_name = key_name.decode()
+
+	key_name = key_name.lower()
+
+	# TODO: Create a batter Exception type
+	assert key_name == 'default', 'For now, everything will be encrypted using it'
+
+	# First step: Generate the encryption key
+	# We don't need more than 256, so we take the highest under 512 bits
+	# Key sizes are sorted by default, so we just have to take the last one
+	key_length = ENCRYPTION_KEY_SIZE
 
 	print('Generating a %s bits key...' % (key_length * 8), flush=True, end='')
 	key = os.urandom(key_length)
 	print('done', flush=True)
 
-	password, confirmation = '01'
+	try:
+		os.chdir(name)
+	except FileNotFoundError:
+		# TODO: Create a batter Exception type
+		raise
+	else:
+		try:
+			os.makedirs('keyring', exist_ok=True)
+			os.chdir('keyring')
+			try:
+				# !!! WARNING !!! RACE CONDITION
+				# Process-based and Thread-bases
+				try:
+					open(key_name, 'rb').close()
+				except FileNotFoundError:
+					password, confirmation = '01'
 
-	while password != confirmation:
-		password = getpass.getpass('Please enter a password to encrypt it:')
-		confirmation = getpass.getpass('Please enter a password to encrypt it:')
-		# TODO: Restrict password to secure ones
-		# TODO: Create a special type of password: PIN code
-		if password != confirmation:
-			print('Wrong confirmation')
+					msg = msg0 = 'Please enter a password to encrypt it:'
+					msg1 = 'Passwords mismatch, Please re enter a password to encrypt it:'
 
-	key = encrypt_data(key)
+					while password != confirmation:
+						# TODO: Restrict password to secure ones
+						password = getpass.getpass(msg)
+						confirmation = getpass.getpass('Please confirm your password to encrypt it:')
+						# TODO: Create a special type of password: PIN code
+						if password != confirmation:
+							msg = msg1
+						elif len(password) > ENCRYPTION_KEY_SIZE // 8:
+							msg = 'Password too long' + msg0
+							password, confirmation = '01'
+
+					# A way to check the key, maybe I can do better
+					key = encrypt_data(password.encode().zfill(ENCRYPTION_KEY_SIZE // 8), key + b' is the right key')
+					with open(key_name, 'wb') as f:
+						f.write(key)
+
+				else:
+					raise RuntimeError(
+						'Key already defined'
+					)
+			finally:
+				os.chdir('..')
+		finally:
+			os.chdir('..')
 
 
 def init(name=DEFAULT_NAME, block_size=1024 * 1024, noise_as_background=True):
@@ -82,6 +136,8 @@ def init(name=DEFAULT_NAME, block_size=1024 * 1024, noise_as_background=True):
 		# TODO: Optimize to make it chunk by chunk for big block sizes
 		f.write(os.urandom(block_size) if noise_as_background else bytes(block_size))
 
+	generate_key(name, 'default')
+
 
 def nuke(name):
 	"""Destroy the entire database, hazardous, will be removed later"""
@@ -94,6 +150,10 @@ def nuke(name):
 		except FileNotFoundError:
 			continue_ = True
 
+	for i in os.scandir(os.path.join(name, 'keyring')):
+		os.remove(i.path)
+
+	os.rmdir(os.path.join(name, 'keyring'))
 	os.rmdir(name)
 
 
@@ -114,6 +174,7 @@ class Tests(unittest.TestCase):
 						self.assertEqual(set(data), {0}, set(data))
 			finally:
 				# I don't want to left trash
+				print(os.path.abspath('.'))
 				nuke(name)
 				print('Database %s deleted' % name)
 
