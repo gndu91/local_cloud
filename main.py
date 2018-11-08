@@ -242,6 +242,15 @@ class Tests(unittest.TestCase):
 			nuke(name)
 			print('Database %s deleted' % name)
 
+	def test_download(self):
+		try: init('Download')
+		except: pass
+		url = "http://www.geeksforgeeks.org/get-post-requests-using-python/"
+		import requests
+		write('Download', url, requests.get(url))
+		read('Download', url)
+
+	@unittest.skip("Skipping it while we don't change the function")
 	def test(self):
 		# First of all, we choose an unique name to avoid messing with actual data
 		noise = random.choice((False, True))
@@ -261,7 +270,6 @@ class Tests(unittest.TestCase):
 			r = read(name, 'main.txt')
 			print(r)
 			assert r == text
-
 
 		finally:
 			# I don't want to left trash
