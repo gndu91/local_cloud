@@ -181,7 +181,6 @@ class Tests(unittest.TestCase):
 	def test_encryption(self):
 		"""Check that encryption is working properly.
 		For now, the entire encryption is based on hard-coded preferences, later, this will change"""
-		for i in range(2):
-			key = os.urandom(ENCRYPTION_KEY_SIZE // 8)
-			data = bytes(ENCRYPTION_ALGORITHM.block_size * 1024 // 8)
-			self.assertEqual(decrypt_data(key, encrypt_data(key, data)), data)
+		key = os.urandom(ENCRYPTION_KEY_SIZE // 8)
+		data = bytes(ENCRYPTION_ALGORITHM.block_size * 1024 // 8)
+		self.assertEqual(decrypt_data(key, encrypt_data(key, data)), data)
