@@ -73,9 +73,9 @@ def generate_key(name, key_name='DEFAULT'):
 	# First step: Generate the encryption key
 	# We don't need more than 256, so we take the highest under 512 bits
 	# Key sizes are sorted by default, so we just have to take the last one
-	key_length = ENCRYPTION_KEY_SIZE
+	key_length = ENCRYPTION_KEY_SIZE * 8
 
-	print('Generating a %s bits key...' % (key_length * 8), flush=True, end='')
+	print('Generating a %s bits key...' % key_length, flush=True, end='')
 	key = os.urandom(key_length)
 	print('done', flush=True)
 
