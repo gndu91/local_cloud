@@ -37,6 +37,7 @@ def encrypt_data(key, data) -> bytes:
 	encryptor, padder = cipher.encryptor(), PKCS7(ENCRYPTION_ALGORITHM.block_size).padder()
 	return nonce + encryptor.update(padder.update(data) + padder.finalize()) + encryptor.finalize()
 
+
 # For the moment, deciphering with a wrong key is like accessing an non reserved
 # 	memory adress, sometimes it crashes, sometimes it passes (in this case it
 # 	fails to unpad the deciphered data)
@@ -57,7 +58,7 @@ BLOCK_INDEX_LENGTH = 4
 DEFAULT_NAME = 'default'
 DEFAULT_TMP_NONCE_LENGTH = 8
 BLOCK_SIZE = 1024
-CHUNK_SIZE = 1024*1024
+CHUNK_SIZE = 1024 * 1024
 
 
 # TODO: Create recovery methods, and store them at the end of blocks
@@ -128,6 +129,7 @@ def generate_key(name, key_name='DEFAULT'):
 		finally:
 			os.chdir('..')
 
+
 def fetch_key(name, key_name='default'):
 	"""Ask the password and return the key"""
 	# TODO: Fix this big hole to become thread safe
@@ -152,6 +154,7 @@ def fetch_key(name, key_name='default'):
 	kkk = len(b' is the right key')
 	print(decrypted_key[:-kkk])
 	return decrypted_key[:-kkk]
+
 
 def init(name=DEFAULT_NAME, chunk_size=CHUNK_SIZE, noise_as_background=True):
 	"""Initialize a local folder, with a fixed block of noise or zeros"""
@@ -185,10 +188,12 @@ def nuke(name):
 	os.rmdir(os.path.join(name, 'keyring'))
 	os.rmdir(name)
 
+
 def read(name, path):
 	# TODO: Checks
 	with dbm.dumb.open(os.path.join(name, 'BLOCK%s' % str(0).zfill(BLOCK_INDEX_LENGTH))) as db:
 		return decrypt_data(fetch_key(name), db[path])
+
 
 def write(name, path, content):
 	# TODO: Checks
@@ -243,8 +248,10 @@ class Tests(unittest.TestCase):
 			print('Database %s deleted' % name)
 
 	def test_download(self):
-		try: init('Download')
-		except: pass
+		try:
+			init('Download')
+		except:
+			pass
 		url = "http://www.geeksforgeeks.org/get-post-requests-using-python/"
 		import requests
 		write('Download', url, requests.get(url))
